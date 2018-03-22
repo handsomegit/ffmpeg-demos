@@ -150,6 +150,22 @@ int read_packet(void *opaque, uint8_t *buf, int buf_size)
 	return buf_size;
 }
 
+int read_buffer2(void* ptr, uint8_t* buf, int buf_size)
+
+{
+
+	FILE* fp = (FILE*)ptr;
+
+	size_t size = fread(buf, 1, buf_size, fp);
+	std::cout << ptr << "\n";
+
+	int ret = size;
+
+	return ret;
+
+}
+
+
 /* 打开前端传来的视频buffer */
 int open_input_buffer(uint8_t *buf, int len)
 {
@@ -157,6 +173,8 @@ int open_input_buffer(uint8_t *buf, int len)
 	unsigned char *avio_ctx_buffer = NULL;
 	size_t avio_ctx_buffer_size = 32768;
 	struct buffer_data bd = { 0 };
+
+	AVInputFormat* in_fmt = NULL;
 
 	bd.ptr = buf;  /* will be grown as needed by the realloc above */
 	bd.size = len; /* no data at this point */
@@ -168,10 +186,64 @@ int open_input_buffer(uint8_t *buf, int len)
 	/* 读内存数据 */
 	avio_ctx = avio_alloc_context(avio_ctx_buffer, avio_ctx_buffer_size, 0, &bd, read_packet, NULL, NULL);
 
+
+
+	if (av_probe_input_buffer2(avio_ctx, &in_fmt, "", NULL, 0, 0) < 0)//探测从内存中获取到的媒体流的格式
+	{
+		fprintf(stderr, "probe format failed\n");
+		return -1;
+	}
+	else {
+		fprintf(stdout, "format:%s[%s]\n", in_fmt->name, in_fmt->long_name);
+	}
+
 	fmt_ctx->pb = avio_ctx;
+	fmt_ctx->flags = AVFMT_FLAG_CUSTOM_IO;
 
 	/* 打开内存缓存文件, and allocate format context */
-	if (avformat_open_input(&fmt_ctx, NULL, NULL, NULL) < 0)
+	if (avformat_open_input(&fmt_ctx, "", NULL, NULL) < 0)
+	{
+		fprintf(stderr, "Could not open input\n");
+		return -1;
+	}
+	return 0;
+}
+
+int open_input_file() {
+	AVIOContext *avio_ctx = NULL;
+	unsigned char *avio_ctx_buffer = NULL;
+	size_t avio_ctx_buffer_size = 32768;
+	struct buffer_data bd = { 0 };
+
+	AVInputFormat* in_fmt = NULL;
+
+
+	FILE *p_file = NULL;
+	fopen_s(&p_file, "frag_bunny265.mp4", "rb");
+
+	fmt_ctx = avformat_alloc_context();
+
+	avio_ctx_buffer = (unsigned char *)av_malloc(avio_ctx_buffer_size);
+
+	/* 读内存数据 */
+	avio_ctx = avio_alloc_context(avio_ctx_buffer, avio_ctx_buffer_size, 0, p_file, read_buffer2, NULL, NULL);
+
+
+
+	if (av_probe_input_buffer2(avio_ctx, &in_fmt, "", NULL, 0, 0) < 0)//探测从内存中获取到的媒体流的格式
+	{
+		fprintf(stderr, "probe format failed\n");
+		return -1;
+	}
+	else {
+		fprintf(stdout, "format:%s[%s]\n", in_fmt->name, in_fmt->long_name);
+	}
+
+	fmt_ctx->pb = avio_ctx;
+	fmt_ctx->flags = AVFMT_FLAG_CUSTOM_IO;
+
+	/* 打开内存缓存文件, and allocate format context */
+	if (avformat_open_input(&fmt_ctx, "", NULL, NULL) < 0)
 	{
 		fprintf(stderr, "Could not open input\n");
 		return -1;
@@ -240,17 +312,21 @@ buffer_data get_file_buffer(const char * filename) {
 	return bd;
 }
 
+
+
 void demuxing_decoding(const char* filename)
 {
 
 
-	char filepath[] = "frag_bunny.mp4";
+	char filepath[] = "frag_bunny265.mp4";
 
-	buffer_data bd = fecth_to_buffer();
-	open_input_buffer(bd.ptr,bd.size);
+	open_input_file();
 
-	///* 打开内存缓存文件, and allocate format context */
-	//if (avformat_open_input(&fmt_ctx, NULL, NULL, NULL) < 0)
+	//buffer_data bd = get_file_buffer(filepath);
+	//open_input_buffer(bd.ptr,bd.size);
+
+	/* 打开内存缓存文件, and allocate format context */
+	//if (avformat_open_input(&fmt_ctx, "http://10.10.1.119:8888/frag_bunny.mp4", NULL, NULL) < 0)
 	//{
 	//	fprintf(stderr, "Could not open input\n");
 	//	return;
@@ -294,9 +370,19 @@ void demuxing_decoding(const char* filename)
 
 	video_dec_ctx = avcodec_alloc_context3(video_dec);
 	avcodec_parameters_to_context(video_dec_ctx, video_stream->codecpar);
-	avcodec_open2(video_dec_ctx, video_dec, NULL);
+	//avcodec_open2(video_dec_ctx, video_dec, NULL);
 
+
+	if (video_dec_ctx->codec_type == AVMEDIA_TYPE_VIDEO || video_dec_ctx->codec_type == AVMEDIA_TYPE_AUDIO) {
+		if (video_dec_ctx->codec_type == AVMEDIA_TYPE_VIDEO)
+			video_dec_ctx->framerate = av_guess_frame_rate(fmt_ctx, video_stream, NULL);
+		/* Open decoder */
+		 avcodec_open2(video_dec_ctx, video_dec, NULL);
+
+	}
 	std::cout << video_dec->name << "\n";
+
+	//打印信息
 	av_dump_format(fmt_ctx, 0, NULL, 0);
 
 	frame = av_frame_alloc();
@@ -324,16 +410,14 @@ void demuxing_decoding(const char* filename)
 		video_dec_ctx->width, video_dec_ctx->height, AV_PIX_FMT_RGB24, SWS_BICUBIC, NULL, NULL, NULL);
 
 
-	
-	Sleep(500);
-	
+	//
+	//Sleep(1000);
+	//
 
 	//int i = 0;
 	//int ret;
 	//while ((ret = av_read_frame(fmt_ctx, &pkt)) >= 0)
 	//{
-	//	std::cout << pkt.size << "pkt.size\n";
-	//	std::cout << ret << "ret\n";
 	//	if (pkt.stream_index == video_stream_idx)
 	//	{
 
