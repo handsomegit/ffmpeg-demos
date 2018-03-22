@@ -1,7 +1,7 @@
 
 
 
-//用来将内存buffer1的数据拷贝到buf
+//用来将内存buffer的数据拷贝到buf
 int read_packet(void *opaque, uint8_t *buf, int buf_size)
 {
   struct buffer_data *bd = (struct buffer_data *)opaque;
