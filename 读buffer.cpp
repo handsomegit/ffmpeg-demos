@@ -19,19 +19,6 @@ int read_packet(void *opaque, uint8_t *buf, int buf_size)
   return buf_size;
 }
 
-static int decode_packet(int *got_frame, int cached)
-{
-  int ret = 0;
-  int decoded = pkt.size;
-
-  *got_frame = 0;
-  avcodec_send_packet(video_dec_ctx, &pkt);
-
-
-  return decoded;
-}
-
-
 /* 打开前端传来的视频buffer */
 int open_input_buffer(uint8_t *buf, int len)
 {
