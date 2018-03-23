@@ -1,0 +1,22 @@
+var ffmpegPath = require('ffmpeg-static').path;
+var ffmpeg = require('fluent-ffmpeg');
+ffmpeg.setFfmpegPath(ffmpegPath);
+
+// ffmpeg('rtsp://admin:admin12345@10.10.1.205:554/Streaming/Channels/101')
+// .format('flv').run();
+
+
+
+
+
+// ffmpeg('rtsp://admin:admin12345@10.10.1.205:554/Streaming/Channels/101')
+//   .videoCodec('libx264')
+//   .audioCodec('libmp3lame')
+//   .size('320x240')
+//   .on('error', function(err) {
+//     console.log('An error occurred: ' + err.message);
+//   })
+//   .on('end', function() {
+//     console.log('Processing finished !');
+//   })
+//   .run();
