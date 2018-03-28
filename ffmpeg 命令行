@@ -1,0 +1,4 @@
+
+// 播放原始格式
+ffplay -f rawvideo -video_size 640x360 frame0.yuv
+ffplay -f rawvideo -pixel_format rgb24 -video_size 640x360 rgbfile.rgb
