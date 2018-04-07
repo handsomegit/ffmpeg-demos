@@ -2,3 +2,6 @@
 // 播放原始格式
 ffplay -f rawvideo -video_size 640x360 frame0.yuv
 ffplay -f rawvideo -pixel_format rgb24 -video_size 640x360 rgbfile.rgb
+
+ffmpeg -i 三十天成为图享网红.30.Days.To.Get.Instafamous.中英字幕.HDTV.AAC.720p.x264.mp4 -vcod
+ec h264 -bf 0 -g 25  -an -f h264 test2.264
