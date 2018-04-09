@@ -4,3 +4,4 @@ ffplay -f rawvideo -video_size 640x360 frame0.yuv
 ffplay -f rawvideo -pixel_format rgb24 -video_size 640x360 rgbfile.rgb
 
 ffmpeg -i xxx.mp4 -vcodec h264 -bf 0 -g 25  -an -f h264 test2.264
+ffmpeg -i rtsp://... -vcodec copy out.hevc
