@@ -5,3 +5,4 @@ ffplay -f rawvideo -pixel_format rgb24 -video_size 640x360 rgbfile.rgb
 
 ffmpeg -i xxx.mp4 -vcodec h264 -bf 0 -g 25  -an -f h264 test2.264
 ffmpeg -i rtsp://... -vcodec copy out.hevc
+ffmpeg -y -hwaccel cuvid -c:v hevc_cuvid -vsync 0 -i cam.265 -vcodec hevc_nvenc output0.264
